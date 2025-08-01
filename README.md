@@ -256,7 +256,7 @@ LocalMind 프로젝트에 기여하고 싶으시다면:
 
 **Made with ❤️ by LocalMind Team**
 
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/LocalMind?style=social)](https://github.com/yourusername/LocalMind)
-[![GitHub forks](https://img.shields.io/github/forks/yourusername/LocalMind?style=social)](https://github.com/yourusername/LocalMind)
+[![GitHub stars](https://img.shields.io/github/stars/yourusername/LocalMind?style=social)](https://github.com/JIWOOK23/LocalMind)
+[![GitHub forks](https://img.shields.io/github/forks/yourusername/LocalMind?style=social)](https://github.com/JIWOOK23/LocalMind)
 
 </div>
