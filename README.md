@@ -164,9 +164,9 @@ python evaluation.py
 LocalMind/
 ├── 🖼️  Gemini_Generated_Image_t7sbxkt7sbxkt7sb.png  # 프로젝트 로고
 ├── 📁  data/                                        # 원본 문서 폴더
-├── �️  rgui_app.py                                  # GUI 애플리케이션
+├── �️   gui_app.py                                  # GUI 애플리케이션
 ├── 🚀  run_gui.py                                  # GUI 실행 스크립트
-├── �️ e database.py                                 # 데이터베이스 관리
+├── �️   database.py                                 # 데이터베이스 관리
 ├── 🔍  keyword_analyzer.py                         # 키워드 분석
 ├── 🛠️  function_tools.py                           # Function Calling 도구
 ├── �  rcreate_db.py                                # 벡터 DB 생성
