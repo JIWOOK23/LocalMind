@@ -516,6 +516,16 @@ class LocalMindGUI:
         if st.button("+ 새 채팅", key="new_chat", help="새로운 채팅 시작", use_container_width=True):
             self.create_new_session()
         
+        # 문서 업로드
+        uploaded_file = st.file_uploader(
+            "📄 문서 업로드",
+            type=['pdf', 'txt', 'md', 'docx'],
+            help="PDF, TXT, MD, DOCX 파일 지원"
+        )
+        
+        if uploaded_file:
+            self.handle_file_upload(uploaded_file)
+        
         st.markdown("<br>", unsafe_allow_html=True)
         
         # 채팅 세션 목록
@@ -738,7 +748,36 @@ class LocalMindGUI:
             <div class="welcome-icon">🧠</div>
             <h1 class="welcome-title">오늘 밤 어떤 생각이 드시나요?</h1>
             <p class="welcome-subtitle">LocalMind와 함께 문서를 분석하고 대화해보세요</p>
+            
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                <div style="background: #f0f0ee; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;" 
+                     onclick="document.querySelector('[data-testid=\\"stTextArea\\"] textarea').value='문서의 주요 내용을 요약해주세요'; document.querySelector('[data-testid=\\"stTextArea\\"] textarea').focus();">
+                    📄 문서 요약
+                </div>
+                <div style="background: #f0f0ee; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;"
+                     onclick="document.querySelector('[data-testid=\\"stTextArea\\"] textarea').value='핵심 키워드를 추출해주세요'; document.querySelector('[data-testid=\\"stTextArea\\"] textarea').focus();">
+                    🔍 키워드 추출
+                </div>
+                <div style="background: #f0f0ee; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;"
+                     onclick="document.querySelector('[data-testid=\\"stTextArea\\"] textarea').value='이 문서의 스타일로 새로운 텍스트를 작성해주세요'; document.querySelector('[data-testid=\\"stTextArea\\"] textarea').focus();">
+                    ✍️ 문체 모방
+                </div>
+            </div>
         </div>
+        
+        <script>
+        // 제안 버튼 호버 효과
+        document.querySelectorAll('[onclick]').forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.background = '#e8e8e5';
+                btn.style.transform = 'translateY(-2px)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.background = '#f0f0ee';
+                btn.style.transform = 'translateY(0)';
+            });
+        });
+        </script>
         """, unsafe_allow_html=True)
     
     def render_messages(self):
@@ -834,8 +873,8 @@ class LocalMindGUI:
             
             with col1:
                 user_input = st.text_area(
-                    "메시지 입력",
-                    placeholder="메시지를 입력하세요...",
+                    "",
+                    placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈, Enter로 전송)",
                     height=50,
                     disabled=st.session_state.is_generating,
                     key="chat_input",
@@ -843,27 +882,11 @@ class LocalMindGUI:
                 )
             
             with col2:
+                submit_icon = "⏳" if st.session_state.is_generating else "↑"
                 submit = st.form_submit_button(
-                    "↑",
+                    submit_icon,
                     disabled=st.session_state.is_generating
                 )
-            
-            # 고급 옵션
-            with st.expander("🔧 고급 옵션", expanded=False):
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    use_document_context = st.checkbox("📄 문서 컨텍스트 사용", value=True)
-                
-                with col2:
-                    response_style = st.selectbox(
-                        "✍️ 응답 스타일",
-                        ["일반", "상세", "간결", "문체모방"],
-                        index=0
-                    )
-                
-                with col3:
-                    temperature = st.slider("🌡️ 창의성", 0.0, 1.0, 0.1, 0.1)
         
         # 로딩 상태 표시
         if st.session_state.is_generating:
@@ -873,15 +896,41 @@ class LocalMindGUI:
                 <span class="loading-dots">...</span>
             </div>
             """, unsafe_allow_html=True)
+        else:
+            # 입력 힌트
+            if user_input and len(user_input.strip()) > 0:
+                st.markdown("""
+                <div style="font-size: 0.8rem; color: #999; text-align: center; margin-top: 0.5rem;">
+                    Enter로 전송 • Shift+Enter로 줄바꿈
+                </div>
+                """, unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
+        
+        # 키보드 단축키 지원
+        st.markdown("""
+        <script>
+        document.addEventListener('keydown', function(e) {
+            const textarea = document.querySelector('[data-testid="stTextArea"] textarea');
+            if (textarea && e.target === textarea) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    const submitBtn = document.querySelector('[data-testid="stFormSubmitButton"] button');
+                    if (submitBtn && !submitBtn.disabled) {
+                        submitBtn.click();
+                    }
+                }
+            }
+        });
+        </script>
+        """, unsafe_allow_html=True)
         
         # 메시지 처리
         if submit and user_input and user_input.strip():
-            self.handle_message(user_input.strip(), use_document_context, response_style)
+            self.handle_message(user_input.strip())
     
-    def handle_message(self, user_input: str, use_document_context: bool = True, response_style: str = "일반"):
+    def handle_message(self, user_input: str):
         """메시지 처리"""
         if st.session_state.is_generating:
             return
@@ -1139,4 +1188,30 @@ def main():
         st.error(f"앱 초기화 오류: {str(e)}")
 
 if __name__ == "__main__":
-    main()
+    main()    
+def handle_file_upload(self, uploaded_file):
+        """파일 업로드 처리"""
+        try:
+            # 파일 저장
+            upload_dir = "data"
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            file_path = os.path.join(upload_dir, uploaded_file.name)
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            
+            # 데이터베이스에 문서 정보 저장
+            doc_id = db.add_document(
+                filename=uploaded_file.name,
+                filepath=file_path,
+                file_type=uploaded_file.type,
+                file_size=uploaded_file.size
+            )
+            
+            st.success(f"✅ {uploaded_file.name} 파일이 업로드되었습니다!")
+            
+            # 문서 처리 상태 업데이트
+            db.update_document_processed(doc_id, True)
+            
+        except Exception as e:
+            st.error(f"❌ 파일 업로드 중 오류: {str(e)}")
